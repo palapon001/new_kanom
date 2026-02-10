@@ -1,0 +1,165 @@
+/* -----------------------------------------------------------
+   1. IMPORTS & VARIABLES
+----------------------------------------------------------- */
+/* โหลดฟอนต์ Kanit จาก Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* ค่าสีเริ่มต้น (เผื่อกรณี PHP ไม่ทำงาน หรือโหลดช้า) */
+    --nia-magenta: #E6007E;
+    --nia-purple: #2D1F57;
+    --nia-gold: #FDB913;
+    --nia-bg: #F4F6F9;
+    --text-dark: #333333;
+    --text-muted: #6c757d;
+}
+
+/* -----------------------------------------------------------
+   2. GLOBAL STYLES
+----------------------------------------------------------- */
+body {
+    font-family: 'Kanit', sans-serif;
+    background-color: var(--nia-bg);
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased; /* ให้ตัวหนังสือคมชัดบน Mac/iOS */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    color: var(--nia-purple);
+    letter-spacing: -0.5px;
+}
+
+a {
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+/* -----------------------------------------------------------
+   3. UTILITY CLASSES (สีและตัวช่วย)
+----------------------------------------------------------- */
+.text-magenta { color: var(--nia-magenta) !important; }
+.bg-magenta { background-color: var(--nia-magenta) !important; color: white; }
+
+.text-purple { color: var(--nia-purple) !important; }
+.bg-purple { background-color: var(--nia-purple) !important; color: white; }
+
+.text-gold { color: var(--nia-gold) !important; }
+.bg-gold { background-color: var(--nia-gold) !important; }
+
+/* -----------------------------------------------------------
+   4. COMPONENTS: BUTTONS
+----------------------------------------------------------- */
+/* ปุ่มหลักของธีม NIA (สีบานเย็น) */
+.btn-nia {
+    background-color: var(--nia-magenta);
+    border: 1px solid var(--nia-magenta);
+    color: white;
+    border-radius: 50px; /* ทรงแคปซูล */
+    padding: 8px 24px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-nia:hover {
+    background-color: #c4006b; /* สีเข้มขึ้นตอนเอาเมาส์ชี้ */
+    border-color: #c4006b;
+    color: white;
+    transform: translateY(-2px); /* ลอยขึ้นเล็กน้อย */
+    box-shadow: 0 4px 12px rgba(230, 0, 126, 0.4); /* เงาสีชมพู */
+}
+
+/* ปุ่มแบบโปร่งใส ขอบสีบานเย็น */
+.btn-outline-nia {
+    background-color: transparent;
+    border: 2px solid var(--nia-magenta);
+    color: var(--nia-magenta);
+    border-radius: 50px;
+    padding: 8px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-nia:hover {
+    background-color: var(--nia-magenta);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* -----------------------------------------------------------
+   5. COMPONENTS: CARDS
+----------------------------------------------------------- */
+.card {
+    border: none;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+/* Effect ตอนเอาเมาส์ชี้การ์ด */
+.card:hover {
+    transform: translateY(-5px); /* ลอยขึ้น */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; /* เงาชัดขึ้น */
+}
+
+/* ตัดคำถ้าประโยคยาวเกินไป (ใช้กับ Description ในการ์ด) */
+.two-lines {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* -----------------------------------------------------------
+   6. COMPONENTS: NAVBAR
+----------------------------------------------------------- */
+.navbar-nia {
+    background-color: var(--nia-purple);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* ลิงก์ในเมนู */
+.navbar-nia .nav-link {
+    color: rgba(255,255,255,0.8) !important;
+    font-weight: 400;
+    position: relative;
+}
+
+.navbar-nia .nav-link:hover, 
+.navbar-nia .nav-link.active {
+    color: #fff !important;
+    font-weight: 500;
+}
+
+/* ขีดเส้นใต้เมนูตอน Hover (Optional Animation) */
+.navbar-nia .nav-link::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 2px;
+    background: var(--nia-magenta);
+    transition: width .3s;
+    position: absolute;
+    bottom: 5px;
+    left: 1rem; /* ปรับตาม padding ของ bootstrap px-3 */
+}
+
+.navbar-nia .nav-link:hover::after,
+.navbar-nia .nav-link.active::after {
+    width: calc(100% - 2rem); /* ความกว้างลบ padding ซ้ายขวา */
+}
+
+/* -----------------------------------------------------------
+   7. FOOTER LINKS
+----------------------------------------------------------- */
+.hover-white {
+    transition: color 0.2s;
+}
+.hover-white:hover {
+    color: var(--nia-magenta) !important;
+    padding-left: 5
+}
