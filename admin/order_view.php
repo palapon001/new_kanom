@@ -5,6 +5,7 @@ require_once '../function.php';
 
 // 1. ความปลอดภัย: Admin เท่านั้น
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    $_SESSION['error'] = 'คุณไม่มีสิทธิ์เข้าถึงส่วนนี้';
     header("Location: ../login.php");
     exit();
 }
@@ -17,12 +18,18 @@ if (isset($_POST['admin_update_status'])) {
     $tracking = $_POST['tracking_no'] ?? '';
 
     // อัปเดตสถานะลง DB
-    update('orders', [
+    $update_result = update('orders', [
         'status' => $new_status,
         'tracking_no' => $tracking
     ], "id = ?", [$order_id]);
 
-    echo "<script>alert('✅ Admin: อัปเดตสถานะเรียบร้อยแล้ว'); </script>";
+    if ($update_result) {
+        $_SESSION['success'] = '✅ Admin: อัปเดตสถานะเรียบร้อยแล้ว';
+        header("Location: order_view.php?id=$order_id");
+        exit();
+    } else {
+        $_SESSION['error'] = 'เกิดข้อผิดพลาดในการอัปเดต';
+    }
 }
 
 // 3. ดึงข้อมูลออเดอร์ + ข้อมูลลูกค้า + ข้อมูลร้านค้า
@@ -37,7 +44,9 @@ $sql = "SELECT o.*,
 $order = selectOne($sql, [$order_id]);
 
 if (!$order) {
-    die("ไม่พบข้อมูลคำสั่งซื้อ");
+    $_SESSION['error'] = 'ไม่พบข้อมูลคำสั่งซื้อ';
+    header("Location: orders_manage.php");
+    exit();
 }
 
 // 4. ดึงรายการสินค้าในออเดอร์
@@ -52,7 +61,7 @@ include '../includes/navbar.php';
     
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="orders_manage.php" class="text-muted">รายการออเดอร์ทั้งหมด</a></li>
+            <li class="breadcrumb-item"><a href="orders_manage.php" class="text-muted text-decoration-none">รายการออเดอร์ทั้งหมด</a></li>
             <li class="breadcrumb-item active">ออเดอร์ #<?= $order['order_no'] ?></li>
         </ol>
     </nav>
@@ -66,28 +75,31 @@ include '../includes/navbar.php';
                     <h5 class="fw-bold text-purple mb-4"><i class="fas fa-handshake me-2"></i>ข้อมูลคู่ค้า</h5>
                     <div class="row">
                         <div class="col-md-6 border-end">
-                            <h6 class="text-muted small fw-bold">ผู้ขาย (SHOP)</h6>
+                            <h6 class="text-muted small fw-bold text-uppercase">ผู้ขาย (SHOP)</h6>
                             <p class="fw-bold mb-1"><?= htmlspecialchars($order['shop_name']) ?></p>
                             <p class="small text-muted mb-1"><i class="fas fa-phone me-1"></i> <?= htmlspecialchars($order['shop_phone']) ?></p>
                             <p class="small text-muted"><i class="fas fa-map-marker-alt me-1"></i> <?= htmlspecialchars($order['shop_address']) ?></p>
                         </div>
                         <div class="col-md-6 ps-md-4">
-                            <h6 class="text-muted small fw-bold">ผู้ซื้อ (CUSTOMER)</h6>
+                            <h6 class="text-muted small fw-bold text-uppercase">ผู้ซื้อ (CUSTOMER)</h6>
                             <p class="fw-bold mb-1"><?= htmlspecialchars($order['customer_name']) ?></p>
                             <p class="small text-muted mb-1"><i class="fas fa-phone me-1"></i> <?= htmlspecialchars($order['customer_phone']) ?></p>
-                            <p class="small text-muted"><i class="fas fa-map-marker-alt me-1"></i> <?= htmlspecialchars($order['shipping_address']) ?></p>
+                            <div class="bg-light p-2 rounded small text-muted border">
+                                <i class="fas fa-map-marker-alt me-1 text-danger"></i> 
+                                <?= nl2br(htmlspecialchars($order['shipping_address'] ?? $order['customer_address'])) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0 fw-bold">รายการสินค้า</h5>
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="mb-0 fw-bold text-purple"><i class="fas fa-shopping-basket me-2"></i>รายการสินค้า</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table mb-0">
+                        <table class="table mb-0 align-middle">
                             <thead class="bg-light">
                                 <tr>
                                     <th class="ps-4">สินค้า</th>
@@ -99,10 +111,10 @@ include '../includes/navbar.php';
                             <tbody>
                                 <?php foreach($items as $item): ?>
                                 <tr>
-                                    <td class="ps-4"><?= htmlspecialchars($item['product_name']) ?></td>
+                                    <td class="ps-4 fw-bold"><?= htmlspecialchars($item['product_name']) ?></td>
                                     <td class="text-center">฿<?= number_format($item['price']) ?></td>
                                     <td class="text-center">x<?= $item['quantity'] ?></td>
-                                    <td class="text-end pe-4">฿<?= number_format($item['price'] * $item['quantity']) ?></td>
+                                    <td class="text-end pe-4 fw-bold">฿<?= number_format($item['price'] * $item['quantity']) ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -117,24 +129,30 @@ include '../includes/navbar.php';
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0 fw-bold">หลักฐานการโอนเงิน</h5>
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="mb-0 fw-bold text-purple"><i class="fas fa-file-invoice-dollar me-2"></i>หลักฐานการโอนเงิน</h5>
                 </div>
                 <div class="card-body text-center bg-light">
-                    <?php if($order['slip_image']): ?>
+                    <?php if(!empty($order['slip_image'])): ?>
                         <?php 
                             $slip = $order['slip_image'];
-                            if(!filter_var($slip, FILTER_VALIDATE_URL)) $slip = '../uploads/slips/'.$slip;
+                            $slip_path_check = '../uploads/slips/' . $slip;
+                            
+                            if (file_exists($slip_path_check)) {
+                                $display_slip = $slip_path_check;
+                            } else {
+                                $display_slip = 'https://placehold.co/400x600?text=Slip+Not+Found';
+                            }
                         ?>
-                        <a href="<?= $slip ?>" target="_blank">
-                            <img src="<?= $slip ?>" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+                        <a href="<?= $display_slip ?>" target="_blank">
+                            <img src="<?= $display_slip ?>" class="img-fluid rounded shadow-sm border" style="max-height: 400px; object-fit: contain;">
                         </a>
                         <p class="text-muted mt-2 small"><i class="fas fa-search-plus"></i> คลิกที่รูปเพื่อดูภาพขยาย</p>
                     <?php else: ?>
                         <div class="py-5 text-muted">
                             <i class="fas fa-image fa-3x mb-3 opacity-25"></i>
-                            <p>ไม่มีหลักฐานการโอนเงิน (อาจเป็นการเก็บเงินปลายทาง)</p>
+                            <p class="mb-0">ไม่มีหลักฐานการโอนเงิน (อาจเป็นการเก็บเงินปลายทาง)</p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -173,11 +191,11 @@ include '../includes/navbar.php';
             </div>
             
             <div class="d-grid gap-2">
-                <a href="tel:<?= $order['shop_phone'] ?>" class="btn btn-outline-secondary bg-white">
-                    <i class="fas fa-phone me-2"></i> โทรหาร้านค้า
+                <a href="tel:<?= $order['shop_phone'] ?>" class="btn btn-outline-secondary bg-white shadow-sm">
+                    <i class="fas fa-store me-2"></i> โทรหาร้านค้า
                 </a>
-                <a href="tel:<?= $order['customer_phone'] ?>" class="btn btn-outline-secondary bg-white">
-                    <i class="fas fa-phone me-2"></i> โทรหาลูกค้า
+                <a href="tel:<?= $order['customer_phone'] ?>" class="btn btn-outline-secondary bg-white shadow-sm">
+                    <i class="fas fa-user me-2"></i> โทรหาลูกค้า
                 </a>
             </div>
 

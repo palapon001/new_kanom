@@ -4,6 +4,14 @@ session_start();
 require_once 'config.php';
 require_once 'function.php';
 
+// 🔒 ส่วนที่เพิ่ม: ตรวจสอบการ Login
+if (!isset($_SESSION['user_id'])) {
+    // ถ้ายังไม่ Login ให้แจ้งเตือนและดีดไปหน้า Login
+    $_SESSION['error'] = 'กรุณาเข้าสู่ระบบก่อนเลือกซื้อสินค้า';
+    header("Location: login.php");
+    exit();
+}
+
 // 2. รับค่า ID ร้านค้าจาก URL
 $shop_id = $_GET['id'] ?? 0;
 
@@ -109,7 +117,8 @@ include 'includes/navbar.php';
                                 <form action="process/cart_action.php" method="POST">
                                     <input type="hidden" name="action" value="add">
                                     <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
-                                    <input type="hidden" name="qty" value="1"> <button type="submit" class="btn btn-sm btn-outline-nia rounded-circle" title="เพิ่มลงตะกร้า">
+                                    <input type="hidden" name="qty" value="1"> 
+                                    <button type="submit" class="btn btn-sm btn-outline-nia rounded-circle" title="เพิ่มลงตะกร้า">
                                         <i class="fas fa-cart-plus"></i>
                                     </button>
                                 </form>

@@ -5,6 +5,7 @@ require_once '../function.php';
 
 // 1. ตรวจสอบสิทธิ์
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'shop') {
+    $_SESSION['error'] = 'กรุณาเข้าสู่ระบบร้านค้า';
     header("Location: ../login.php");
     exit();
 }
@@ -15,10 +16,17 @@ $order_id = $_GET['id'] ?? 0;
 // 2. [PROCESS] ส่วนอัปเดตสถานะ (ทำงานเมื่อกดปุ่ม)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
     $new_status = $_POST['status'];
+    
     // อัปเดตสถานะออเดอร์ (ต้องเป็นออเดอร์ของร้านตัวเองเท่านั้น)
-    $sql_update = "UPDATE orders SET status = ? WHERE id = ? AND shop_id = ?";
-    if (update('orders', ['status' => $new_status], "id = ? AND shop_id = ?", [$order_id, $shop_id])) {
-        echo "<script>alert('อัปเดตสถานะเรียบร้อยแล้ว'); window.location.href='order_detail.php?id=$order_id';</script>";
+    $update_result = update('orders', ['status' => $new_status], "id = ? AND shop_id = ?", [$order_id, $shop_id]);
+    
+    if ($update_result) {
+        // ✅ ใช้ Session แจ้งเตือน
+        $_SESSION['success'] = 'อัปเดตสถานะออเดอร์เรียบร้อยแล้ว';
+        header("Location: order_detail.php?id=$order_id");
+        exit();
+    } else {
+        $_SESSION['error'] = 'เกิดข้อผิดพลาดในการอัปเดตสถานะ';
     }
 }
 
@@ -30,7 +38,9 @@ $sql_order = "SELECT o.*, u.fullname, u.email, u.phone
 $order = selectOne($sql_order, [$order_id, $shop_id]);
 
 if (!$order) {
-    die("ไม่พบคำสั่งซื้อ หรือคุณไม่มีสิทธิ์เข้าถึง");
+    $_SESSION['error'] = 'ไม่พบคำสั่งซื้อ หรือคุณไม่มีสิทธิ์เข้าถึง';
+    header("Location: order_list.php");
+    exit();
 }
 
 // 4. ดึงรายการสินค้าในออเดอร์
@@ -147,20 +157,26 @@ include '../includes/navbar.php';
                     <h5 class="fw-bold mb-0 text-purple"><i class="fas fa-file-invoice-dollar me-2"></i>หลักฐานการโอน</h5>
                 </div>
                 <div class="card-body text-center">
-                    <?php if ($order['slip_image']): ?>
+                    <?php if (!empty($order['slip_image'])): ?>
                         <?php 
-                            $slip_path = '../uploads/slips/' . $order['slip_image'];
-                            // กรณีทดสอบ: ถ้าไฟล์ไม่มีจริง ให้ใช้รูป Mockup
-                            if(!file_exists($slip_path)) $slip_path = 'https://source.unsplash.com/400x600/?receipt';
+                            $slip_filename = $order['slip_image'];
+                            $slip_path_check = '../uploads/slips/' . $slip_filename;
+                            
+                            // ตรวจสอบว่ามีไฟล์จริงหรือไม่
+                            if (file_exists($slip_path_check)) {
+                                $display_slip = $slip_path_check;
+                            } else {
+                                $display_slip = 'https://placehold.co/400x600?text=Slip+Not+Found';
+                            }
                         ?>
-                        <a href="<?= $slip_path ?>" target="_blank">
-                            <img src="<?= $slip_path ?>" class="img-fluid rounded border mb-3" style="max-height: 400px;">
+                        <a href="<?= $display_slip ?>" target="_blank">
+                            <img src="<?= $display_slip ?>" class="img-fluid rounded border mb-3" style="max-height: 400px; object-fit: contain;">
                         </a>
                         <p class="small text-muted"><i class="fas fa-search-plus"></i> คลิกเพื่อดูรูปใหญ่</p>
                     <?php else: ?>
                         <div class="py-5 bg-light rounded text-muted">
                             <i class="fas fa-image fa-3x mb-2 opacity-25"></i>
-                            <p class="mb-0">ไม่มีหลักฐานแนบมา</p>
+                            <p class="mb-0">ลูกค้าไม่ได้แนบสลิป</p>
                         </div>
                     <?php endif; ?>
                 </div>
