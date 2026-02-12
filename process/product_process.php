@@ -25,6 +25,9 @@ if ($action == 'add_product' && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $price = $_POST['price'];
     $stock_qty = $_POST['stock_qty'];
     $status = $_POST['status'];
+    
+    // ✅ รับค่า central_id (ถ้าไม่มีให้เป็น NULL)
+    $central_id = !empty($_POST['central_id']) ? $_POST['central_id'] : NULL;
 
     // --- 📸 ส่วนจัดการรูปภาพ ---
     $image_filename = 'default_kanom.png'; // ค่าเริ่มต้น
@@ -49,7 +52,8 @@ if ($action == 'add_product' && $_SERVER['REQUEST_METHOD'] == 'POST') {
         'stock_qty' => $stock_qty,
         'image' => $image_filename,
         'status' => $status,
-        'created_at' => date('Y-m-d H:i:s') // ✅ สร้างครั้งแรกต้องมี
+        'central_id' => $central_id, // ✅ บันทึก central_id
+        'created_at' => date('Y-m-d H:i:s')
     ];
 
     if (insert('products', $data)) {
@@ -83,7 +87,6 @@ if ($action == 'add_product' && $_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
 
-        // ✅ ใช้ Session แจ้งเตือน
         $_SESSION['success'] = 'เพิ่มสินค้าใหม่เรียบร้อยแล้ว';
         header("Location: ../shop/menu_manage.php");
         exit();
@@ -110,14 +113,17 @@ elseif ($action == 'edit_product' && $_SERVER['REQUEST_METHOD'] == 'POST') {
         exit();
     }
 
+    // ✅ รับค่า central_id
+    $central_id = !empty($_POST['central_id']) ? $_POST['central_id'] : NULL;
+
     $update_data = [
         'name' => trim($_POST['name']),
         'description' => trim($_POST['description']),
         'category' => $_POST['category'],
         'price' => $_POST['price'],
         'stock_qty' => $_POST['stock_qty'],
-        'status' => $_POST['status']
-        // ❌ ตัด created_at ออก (ไม่แก้วันที่สร้าง)
+        'status' => $_POST['status'],
+        'central_id' => $central_id // ✅ อัปเดต central_id
     ];
 
     // --- 📸 ส่วนจัดการรูปภาพตอนแก้ไข ---
@@ -127,7 +133,6 @@ elseif ($action == 'edit_product' && $_SERVER['REQUEST_METHOD'] == 'POST') {
         $dest = '../uploads/kanom/' . $new_name;
         
         if (move_uploaded_file($_FILES['product_image']['tmp_name'], $dest)) {
-            // ✅ ถ้าย้ายสำเร็จ ค่อยอัปเดตชื่อไฟล์ใน Array
             $update_data['image'] = $new_name; 
         }
     }
@@ -165,7 +170,6 @@ elseif ($action == 'edit_product' && $_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
 
-        // ✅ ใช้ Session แจ้งเตือน
         $_SESSION['success'] = 'แก้ไขข้อมูลสินค้าเรียบร้อยแล้ว';
         header("Location: ../shop/menu_manage.php");
         exit();
