@@ -75,8 +75,8 @@ $config = [
     // -------------------------------------------------------------------------
     'services' => [
         'line' => [
-            'client_id'     => '2005918527',
-            'client_secret' => 'cb7eaead70916bc7167f3c60981b44e3',
+            'client_id'     => '',
+            'client_secret' => '',
             'callback_url'  => 'http://localhost/git/New_Kanom/callback_line.php',
             'notify_token'  => 'YOUR_NOTIFY_TOKEN',
         ],

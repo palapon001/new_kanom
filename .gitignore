@@ -1,0 +1,24 @@
+# Environment file
+.env
+.env.*
+
+# Config files
+config.php
+config.local.php
+
+# Vendor
+/vendor/
+
+# Logs
+*.log
+
+# Cache
+/cache/
+/tmp/
+
+# Node (ถ้ามี)
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
