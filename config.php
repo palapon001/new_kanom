@@ -1,5 +1,6 @@
 <?php
 include_once('function.php');
+include_once('model.php');
 
 // ปิด Error ชั่วคราว (เปิดเฉพาะตอน Dev)
 if (isset($_GET['debug']) && $_GET['debug'] == 'dev') {
@@ -84,6 +85,9 @@ $config = [
             'default_lat'   => 13.107044,
             'default_long'  => 99.939885,
         ],
+        'longdo_map' => [
+            'api_key' => '87d1501da2f0e2517861feae3af8cad9'
+        ]
     ],
 
     // -------------------------------------------------------------------------

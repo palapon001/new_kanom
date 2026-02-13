@@ -28,7 +28,7 @@
                 <h5 class="fw-bold text-white mb-3" style="color: <?= $config['theme']['colors']['accent'] ?> !important;">เมนูด่วน</h5>
                 <ul class="list-unstyled small text-white-50">
                     <li class="mb-2"><a href="<?= $path_prefix ?>index.php" class="text-white-50 text-decoration-none hover-white"><i class="fas fa-angle-right me-2"></i>หน้าแรก</a></li>
-                    <li class="mb-2"><a href="<?= $path_prefix ?>index.php#directory" class="text-white-50 text-decoration-none hover-white"><i class="fas fa-angle-right me-2"></i>ค้นหาร้านค้า</a></li>
+                    <li class="mb-2"><a href="<?= $path_prefix ?>market_price.php" class="text-white-50 text-decoration-none hover-white"><i class="fas fa-angle-right me-2"></i>ราคากลาง</a></li>
                     <li class="mb-2"><a href="<?= $path_prefix ?>login.php" class="text-white-50 text-decoration-none hover-white"><i class="fas fa-angle-right me-2"></i>สำหรับผู้ประกอบการ</a></li>
                     <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white"><i class="fas fa-angle-right me-2"></i>นโยบายความเป็นส่วนตัว</a></li>
                 </ul>

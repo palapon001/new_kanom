@@ -37,6 +37,12 @@ if (isset($_SESSION['cart'])) {
                 <li class="nav-item">
                     <a class="nav-link px-3 <?= ($current_page == 'index.php') ? 'active' : '' ?>" href="<?= $path_prefix ?>index.php">หน้าแรก</a>
                 </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link px-3 <?= ($current_page == 'market_price.php') ? 'active' : '' ?>" href="<?= $path_prefix ?>market_price.php">
+                        <i class="fas fa-tags me-1"></i> ราคากลาง
+                    </a>
+                </li>
 
                 <?php if (isset($_SESSION['user_id']) && $_SESSION['role'] == 'admin'): ?>
                     <li class="nav-item">
@@ -77,12 +83,12 @@ if (isset($_SESSION['cart'])) {
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
                                 <span class="me-2 text-white fw-bold"><?= htmlspecialchars($_SESSION['user_name']) ?></span>
                                 <div class="bg-white text-purple rounded-circle d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
-                                    <? if (!empty($_SESSION['profile_image'])) { ?>
+                                    <?php if (!empty($_SESSION['profile_image'])) { ?>
                                         <img src="<?= $path_prefix ?>uploads/profiles/<?= htmlspecialchars($_SESSION['profile_image']) ?>"
-                                            style="width: 32px; height: 32px; object-fit: cover;">
-                                         <? } else { ?>
+                                            style="width: 32px; height: 32px; object-fit: cover; border-radius: 50%;">
+                                    <?php } else { ?>
                                         <i class="fas fa-store"></i>
-                                    <? } ?>
+                                    <?php } ?>
                                 </div>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg mt-2 rounded-3">
