@@ -5,48 +5,84 @@ require_once '../function.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $email = trim($_POST['email']);
-    $password = trim($_POST['password']);
+    // 1. คลีนเบอร์โทรศัพท์: ลบทุกอย่างที่ไม่ใช่ตัวเลข (เช่น -, ช่องว่าง, วงเล็บ)
+    $phone = preg_replace('/[^0-9]/', '', $_POST['phone']);
+    $password = $_POST['password'] ?? '';
 
-    if (empty($email) || empty($password)) {
-        $_SESSION['error'] = "กรุณากรอกอีเมลและรหัสผ่าน";
+    // 2. Validation เบื้องต้น
+    if (empty($phone)) {
+        $_SESSION['error'] = "กรุณากรอกเบอร์โทรศัพท์";
         header("Location: ../login.php");
         exit();
     }
 
-    $user = selectOne("SELECT * FROM users WHERE email = ?", [$email]);
+    if (strlen($phone) !== 10) {
+        $_SESSION['error'] = "เบอร์โทรศัพท์ต้องมี 10 หลัก (พบ: " . strlen($phone) . " หลัก)";
+        header("Location: ../login.php");
+        exit();
+    }
 
-    // ✅ แก้ไขตรงนี้: ใช้ MD5
-    $h = md5($password);
+    // 3. ค้นหา User จากฐานข้อมูล
+    $user = selectOne("SELECT * FROM users WHERE phone = ?", [$phone]);
 
-    // เช็คว่าค่า MD5 ตรงกับในฐานข้อมูลไหม
-    if ($user && $h === $user['password']) {
+    if (!$user) {
+        $_SESSION['error'] = "ไม่พบเบอร์โทรศัพท์นี้ในระบบ";
+        header("Location: ../login.php");
+        exit();
+    }
 
+    // 4. ตรวจสอบเงื่อนไขการ Login แยกตามบทบาท (Role)
+    $can_login = false;
+
+    if ($user['role'] == 'user') {
+        // ✅ สำหรับลูกค้าทั่วไป: เข้าได้ทันทีโดยไม่ต้องใช้รหัสผ่าน
+        $can_login = true;
+    } else {
+        // 🔒 สำหรับ Admin หรือ Shop: ต้องตรวจสอบรหัสผ่าน
+        if (empty($password)) {
+            $_SESSION['error'] = "บัญชีระดับเจ้าของร้าน/ผู้ดูแล ต้องระบุรหัสผ่าน";
+            header("Location: ../login.php");
+            exit();
+        }
+
+        // ตรวจสอบ MD5 (ตามมาตรฐานเดิมของระบบคุณ)
+        if (md5($password) === $user['password']) {
+            $can_login = true;
+        } else {
+            $_SESSION['error'] = "รหัสผ่านไม่ถูกต้อง";
+            header("Location: ../login.php");
+            exit();
+        }
+    }
+
+    // 5. ดำเนินการสร้าง Session หากผ่านเงื่อนไข
+    if ($can_login) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['role'] = $user['role'];
-        $_SESSION['email'] = $user['email'];
+        $_SESSION['email'] = $user['email']; // เก็บไว้เผื่อเรียกใช้
+        
+        // เลือกชื่อที่จะแสดงผล
+        $_SESSION['user_name'] = ($user['role'] == 'shop') ? $user['shop_name'] : $user['fullname'];
 
-        if ($user['role'] == 'shop') {
-            $_SESSION['user_name'] = $user['shop_name'];
-        } else {
-            $_SESSION['user_name'] = $user['fullname'];
-        }
+        // ส่งตัวแปร Success (Optional)
+        $_SESSION['success'] = "เข้าสู่ระบบสำเร็จ! สวัสดีคุณ " . $_SESSION['user_name'];
 
-        if ($user['role'] == 'admin') {
-            header("Location: ../admin/dashboard.php");
-        } elseif ($user['role'] == 'shop') {
-            header("Location: ../shop/dashboard.php");
-        } else {
-            header("Location: ../index.php");
+        // 6. Redirect ตามระดับสิทธิ์
+        switch ($user['role']) {
+            case 'admin':
+                header("Location: ../admin/dashboard.php");
+                break;
+            case 'shop':
+                header("Location: ../shop/dashboard.php");
+                break;
+            default:
+                header("Location: ../index.php");
+                break;
         }
-        exit();
-    } else {
-        $_SESSION['error'] = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
-        header("Location: ../login.php");
         exit();
     }
+
 } else {
     header("Location: ../login.php");
     exit();
 }
-?>

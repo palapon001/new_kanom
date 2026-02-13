@@ -5,18 +5,19 @@ require_once 'function.php';
 
 // 1. รับค่า Code จาก LINE
 $code = $_GET['code'] ?? null;
-$state = $_GET['state'] ?? null;
 
 if (!$code) {
-    die("Error: No code received from LINE");
+    // ถ้าไม่มี code ให้เด้งกลับไปหน้า login
+    header("Location: login.php");
+    exit();
 }
 
-// 2. ตั้งค่า API Key จาก Config
+// 2. ดึงค่าจาก Config
 $client_id     = $config['services']['line']['client_id'];
 $client_secret = $config['services']['line']['client_secret'];
 $callback_url  = $config['services']['line']['callback_url'];
 
-// 3. ขอ Access Token
+// 3. แลกเปลี่ยน Code เป็น Access Token
 $token_url = "https://api.line.me/oauth2/v2.1/token";
 $data = [
     'grant_type'    => 'authorization_code',
@@ -31,44 +32,54 @@ curl_setopt($ch, CURLOPT_URL, $token_url);
 curl_setopt($ch, CURLOPT_POST, 1);
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+// 🟢 เพิ่มส่วนนี้เพื่อแก้ปัญหา SSL บน localhost
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
 $response = curl_exec($ch);
 curl_close($ch);
 
 $json = json_decode($response, true);
-$access_token = $json['access_token'] ?? null;
 
-if (!$access_token) {
-    // ถ้า Error ให้แสดงผลเพื่อ Debug
-    echo "Error getting token: ";
-    print_r($json);
+if (!isset($json['access_token'])) {
+    // 🔴 หาก Error ให้ส่งกลับไปหน้า Login พร้อมข้อความแจ้งเตือน
+    $_SESSION['error'] = "การเชื่อมต่อกับ LINE ล้มเหลว หรือ Code หมดอายุ กรุณาลองใหม่อีกครั้ง";
+    header("Location: login.php");
     exit();
 }
 
-// 4. ขอข้อมูลโปรไฟล์ผู้ใช้ (Profile)
+$access_token = $json['access_token'];
+
+// 4. ขอข้อมูล Profile
 $profile_url = "https://api.line.me/v2/profile";
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $profile_url);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    "Authorization: Bearer " . $access_token
-]);
+curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer " . $access_token]);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 🟢 สำหรับ localhost
 $profile_response = curl_exec($ch);
 curl_close($ch);
 
 $profile = json_decode($profile_response, true);
 $line_user_id = $profile['userId'];
 
-// 5. เช็คว่ามี User นี้ใน Database หรือยัง?
+// 5. ตรวจสอบในฐานข้อมูล
+// เช็คว่ามีใครใช้ LINE ID นี้ผูกไว้หรือยัง
 $user = selectOne("SELECT * FROM users WHERE line_id = ?", [$line_user_id]);
 
 if ($user) {
-    // === กรณี A: มีบัญชีแล้ว (Login เลย) ===
+    // ✅ มีบัญชีแล้ว -> Login
     $_SESSION['user_id'] = $user['id'];
-    $_SESSION['user_name'] = $user['fullname'] ?? $user['shop_name'];
+    $_SESSION['fullname'] = $user['fullname'];
     $_SESSION['role'] = $user['role'];
+    
+    // แจ้งเตือนสำเร็จ
+    $_SESSION['success'] = "ยินดีต้อนรับกลับคุณ " . $user['fullname'];
 
-    // เด้งไปตามบทบาท
-    if ($user['role'] == 'shop') {
+    // ส่งไปตามหน้าที่ควรจะเป็น
+    if ($user['role'] == 'admin') {
+        header("Location: admin/index.php");
+    } elseif ($user['role'] == 'shop') {
         header("Location: shop/dashboard.php");
     } else {
         header("Location: index.php");
@@ -76,11 +87,8 @@ if ($user) {
     exit();
 
 } else {
-    // === กรณี B: ยังไม่มีบัญชี (ส่งไปหน้าสมัครสมาชิก) ===
-    // เก็บข้อมูล Profile ไว้ใน Session เพื่อให้หน้า register_line.php ดึงไปใช้
+    // 🆕 ยังไม่มีบัญชี -> ไปหน้าสมัครสมาชิก
     $_SESSION['line_profile'] = $profile;
-    
     header("Location: register_line.php");
     exit();
 }
-?>

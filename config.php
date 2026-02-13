@@ -75,9 +75,9 @@ $config = [
     // -------------------------------------------------------------------------
     'services' => [
         'line' => [
-            'client_id'     => 'YOUR_LINE_CHANNEL_ID',
-            'client_secret' => 'YOUR_LINE_CHANNEL_SECRET',
-            'callback_url'  => 'http://localhost/kanommuangphet/callback_line.php',
+            'client_id'     => '2005918527',
+            'client_secret' => 'cb7eaead70916bc7167f3c60981b44e3',
+            'callback_url'  => 'http://localhost/git/New_Kanom/callback_line.php',
             'notify_token'  => 'YOUR_NOTIFY_TOKEN',
         ],
         'google_maps' => [
