@@ -115,22 +115,13 @@ include 'includes/navbar.php';
                     <hr class="border-dashed my-3">
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">หมวดหมู่</label>
-                        <?php 
-                            $cats = [
-                                'all' => 'ทั้งหมด',
-                                'dessert' => 'ขนมหวาน',
-                                'material' => 'วัตถุดิบ',
-                                'souvenir' => 'ของฝาก',
-                                'drink' => 'เครื่องดื่ม'
-                            ];
-                        ?>
+                        <label class="form-label small fw-bold text-muted">หมวดหมู่</label> 
                         <div class="d-grid gap-2">
-                            <?php foreach($cats as $key => $label): ?>
+                            <?php foreach($category_map as $key => $label): ?>
                             <label class="custom-radio-btn">
                                 <input type="radio" name="category" value="<?= $key ?>" <?= $category_filter == $key ? 'checked' : '' ?> onchange="this.form.submit()">
                                 <span class="content py-2 px-3 rounded-3 d-block border w-100 text-start">
-                                    <?= $label ?>
+                                    <?= $label['name'] ?>
                                 </span>
                             </label>
                             <?php endforeach; ?>

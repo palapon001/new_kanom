@@ -46,27 +46,29 @@ include 'includes/navbar.php';
             <form action="process/login_process.php" method="POST" id="loginForm">
                 
                 <div class="mb-4">
-                    <label class="form-label text-muted small fw-bold">เบอร์โทรศัพท์</label>
+                    <label class="form-label text-muted small fw-bold">เบอร์โทรศัพท์ หรือ อีเมล</label>
                     <div class="input-group input-group-lg">
-                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-phone text-muted"></i></span>
-                        <input type="text" name="phone" id="phone_input" class="form-control bg-light border-start-0 shadow-none" 
-                               placeholder="08xxxxxxxx" maxlength="10" required autofocus autocomplete="off">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="fas fa-user text-muted" id="icon_identity"></i>
+                        </span>
+                        <input type="text" name="identity" id="identity_input" class="form-control bg-light border-start-0 shadow-none" 
+                               placeholder="กรอกเบอร์โทร หรือ อีเมล..." required autofocus autocomplete="off">
                     </div>
-                    <div id="phone_info" class="form-text small mt-2">กรอกเบอร์ 10 หลักเพื่อเข้าสู่ระบบ</div>
+                    <div id="identity_info" class="form-text small mt-2">ระบุข้อมูลที่ลงทะเบียนไว้เพื่อเข้าสู่ระบบ</div>
                 </div>
 
                 <div id="password_section" style="display: none;" class="mb-4 animate__animated animate__fadeIn">
-                    <label class="form-label text-danger small fw-bold"><i class="fas fa-key me-1"></i> รหัสผ่านความปลอดภัย</label>
+                    <label class="form-label text-danger small fw-bold"><i class="fas fa-key me-1"></i> รหัสผ่าน</label>
                     <div class="input-group input-group-lg">
                         <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock text-danger"></i></span>
                         <input type="password" name="password" id="password_input" class="form-control bg-light border-start-0 shadow-none" 
                                placeholder="ระบุรหัสผ่านของคุณ">
                     </div>
-                    <div class="form-text text-danger small mt-2">บัญชีร้านค้า/ผู้ดูแล ต้องยืนยันตัวตนด้วยรหัสผ่าน</div>
+                    <div id="password_hint" class="form-text text-danger small mt-2">กรุณาระบุรหัสผ่านเพื่อยืนยันตัวตน</div>
                 </div>
 
                 <div class="d-grid mb-4">
-                    <button type="submit" class="btn btn-nia btn-lg shadow-sm fw-bold py-3">
+                    <button type="submit" class="btn btn-primary shadow-sm fw-bold py-3">
                         <span id="btn_text">เข้าสู่ระบบทันที</span> <i class="fas fa-arrow-right ms-2"></i>
                     </button>
                 </div>
@@ -78,7 +80,7 @@ include 'includes/navbar.php';
                 </div>
 
                 <div class="d-grid mb-4">
-                    <a href="<?= $line_login_url ?>" class="btn btn-success text-white btn-lg shadow-sm fw-bold py-3" style="background-color: #00B900; border: none; border-radius: 12px;">
+                    <a href="<?= $line_login_url ?>" class="btn btn-success text-white shadow-sm fw-bold py-3" style="background-color: #00B900; border: none; border-radius: 12px;">
                         <i class="fab fa-line me-2 fa-lg"></i> เข้าสู่ระบบด้วย LINE
                     </a>
                 </div>
@@ -94,36 +96,66 @@ include 'includes/navbar.php';
 </div>
 
 <script>
-// ระบบตรวจสอบสิทธิ์เบอร์โทรศัพท์ (Shop/Admin)
-document.getElementById('phone_input').addEventListener('input', function() {
-    const phone = this.value.replace(/[^0-9]/g, ''); // คลีนเบอร์ให้เหลือแต่ตัวเลข
-    this.value = phone;
+const inputField = document.getElementById('identity_input');
+const iconField = document.getElementById('icon_identity');
+const passSection = document.getElementById('password_section');
+const passInput = document.getElementById('password_input');
+const btnText = document.getElementById('btn_text');
+const passHint = document.getElementById('password_hint');
 
-    if (phone.length === 10) {
-        // เรียก API ไปเช็คบทบาท
-        fetch('api/check_role.php?phone=' + phone)
+inputField.addEventListener('input', function() {
+    const val = this.value.trim();
+
+    // 1. เช็คว่าเป็น Email หรือไม่ (มีเครื่องหมาย @)
+    if (val.includes('@')) {
+        // 📧 กรณีเป็น Email: บังคับใส่รหัสผ่านเสมอ
+        iconField.className = 'fas fa-envelope text-purple';
+        showPassword(true, 'อีเมลต้องใช้รหัสผ่านในการเข้าสู่ระบบ');
+        return; 
+    }
+
+    // 2. เช็คว่าเป็นเบอร์โทรศัพท์หรือไม่ (ตัวเลขล้วน)
+    const phoneClean = val.replace(/[^0-9]/g, '');
+    if (phoneClean.length > 0) {
+        iconField.className = 'fas fa-phone text-muted';
+    } else {
+        iconField.className = 'fas fa-user text-muted';
+    }
+
+    if (phoneClean.length === 10 && !val.includes('@')) {
+        // 📱 กรณีเป็นเบอร์โทร 10 หลัก: เช็ค Role ผ่าน API
+        iconField.className = 'fas fa-phone text-success';
+        
+        fetch('api/check_role.php?phone=' + phoneClean)
             .then(response => response.json())
             .then(data => {
-                const passSection = document.getElementById('password_section');
-                const passInput = document.getElementById('password_input');
-                const btnText = document.getElementById('btn_text');
-
                 if (data.role === 'shop' || data.role === 'admin') {
-                    // เปิดช่องรหัสผ่าน
-                    passSection.style.display = 'block';
-                    passInput.required = true;
-                    btnText.innerText = 'ยืนยันเพื่อเข้าสู่ระบบ';
-                    passInput.focus();
+                    // Shop/Admin -> ต้องใส่รหัส
+                    showPassword(true, 'บัญชีร้านค้า/ผู้ดูแล ต้องระบุรหัสผ่าน');
                 } else {
-                    // ซ่อนช่องรหัสผ่าน (ถ้าเป็น User)
-                    passSection.style.display = 'none';
-                    passInput.required = false;
-                    btnText.innerText = 'เข้าสู่ระบบทันที';
+                    // User ทั่วไป -> ไม่ต้องใส่รหัส
+                    showPassword(false);
                 }
             })
-            .catch(err => console.error('Error checking role:', err));
+            .catch(err => console.error(err));
+    } else if (!val.includes('@')) {
+        // ยังพิมพ์ไม่เสร็จ หรือไม่ใช่ทั้งเมลและเบอร์ -> ซ่อนรหัสไปก่อน
+        showPassword(false);
     }
 });
+
+function showPassword(show, hintText = '') {
+    if (show) {
+        passSection.style.display = 'block';
+        passInput.required = true;
+        btnText.innerText = 'ยืนยันเพื่อเข้าสู่ระบบ';
+        if(hintText) passHint.innerText = hintText;
+    } else {
+        passSection.style.display = 'none';
+        passInput.required = false;
+        btnText.innerText = 'เข้าสู่ระบบทันที';
+    }
+}
 </script>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>

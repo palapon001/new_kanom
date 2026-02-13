@@ -27,7 +27,7 @@ include 'includes/navbar.php';
                     <input type="password" name="confirm_password" class="form-control bg-light" required>
                 </div>
                 
-                <button type="submit" class="btn btn-nia w-100 py-2 shadow-sm fw-bold">ลงทะเบียน</button>
+                <button type="submit" class="btn btn-warning w-100 py-2 shadow-sm fw-bold">ลงทะเบียน</button>
             </form>
             
             <div class="text-center mt-3">

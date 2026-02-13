@@ -38,12 +38,6 @@ $sql .= " ORDER BY p.created_at DESC";
 
 $products = select($sql, $params);
 
-// Map หมวดหมู่สำหรับแสดงผล
-$category_map = [
-    'dessert' => 'ขนมหวาน',
-    'material' => 'วัตถุดิบ',
-    'souvenir' => 'ของฝาก'
-];
 
 $theme = $config['theme'];
 include '../includes/header.php';
@@ -149,7 +143,7 @@ include '../includes/navbar.php';
                                             elseif($p['category']=='souvenir') $badge_color = 'bg-primary';
                                         ?>
                                         <span class="badge <?= $badge_color ?> bg-opacity-25 border border-0 fw-normal px-2 py-1 rounded-pill">
-                                            <?= $category_map[$p['category']] ?? $p['category']; ?>
+                                            <?= $category_map[$p['category']]['name'] ?? $p['category']; ?>
                                         </span>
                                     </td>
                                     <td class="fw-bold text-dark">฿<?= number_format($p['price']) ?></td>
