@@ -6,7 +6,7 @@ require_once 'config.php';
 if (isset($_SESSION['user_id'])) {
     header("Location: " . ($_SESSION['role'] == 'shop' ? 'shop/dashboard.php' : 'index.php'));
     exit();
-}
+} 
 
 // สร้าง URL สำหรับปุ่ม LINE Login
 $line_client_id = $config['services']['line']['client_id'];

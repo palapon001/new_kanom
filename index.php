@@ -14,36 +14,51 @@ include 'includes/header.php';
 include 'includes/navbar.php';
 ?>
 
-<div class="position-relative overflow-hidden py-5" 
-     style="background: linear-gradient(135deg, var(--nia-magenta) 0%, var(--nia-purple) 100%);">
-    
-    <div class="container position-relative z-1 text-center py-lg-5">
+<div id="sectionSearch" class="position-relative overflow-hidden py-4 py-lg-5"
+    style="background: linear-gradient(135deg, var(--nia-magenta) 0%, var(--nia-purple) 100%);">
+
+    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" 
+         style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png'); pointer-events: none;"></div>
+
+    <div class="container position-relative z-1 text-center py-3 py-lg-5">
+        
         <span class="badge bg-white text-purple rounded-pill px-3 py-2 mb-3 shadow-sm animate__animated animate__fadeInDown">
             <i class="fas fa-store me-1"></i> ตลาดออนไลน์เมืองเพชร
         </span>
-        <h1 class="display-3 fw-bold text-white mb-3 text-shadow animate__animated animate__fadeInUp">อาณาจักรขนมหวาน</h1>
-        <p class="lead text-white-50 mb-5 animate__animated animate__fadeInUp">รวมสุดยอดของดีเมืองเพชรบุรี ส่งตรงจากแหล่งผลิตถึงมือคุณ</p>
+        
+        <h1 class="display-5 display-md-3 fw-bold text-white mb-3 text-shadow animate__animated animate__fadeInUp">
+            อาณาจักรขนมหวาน
+        </h1>
+        
+        <p class="lead text-white-50 mb-4 mb-lg-5 fs-6 fs-md-4 animate__animated animate__fadeInUp px-3">
+            รวมสุดยอดของดีเมืองเพชรบุรี ส่งตรงจากแหล่งผลิตถึงมือคุณ
+        </p>
 
         <div class="row justify-content-center animate__animated animate__fadeInUp">
-            <div class="col-lg-6">
-                <form action="search.php" method="GET" class="position-relative">
-                    <input type="text" name="q" class="form-control form-control-lg rounded-pill shadow-lg border-0 ps-4 py-3" 
-                           placeholder="ค้นหาเมนูโปรด... (เช่น หม้อแกง, ทองหยอด)">
-                    <button type="submit" class="btn btn-purple rounded-pill position-absolute top-0 end-0 m-1 px-4 py-2 mt-2 me-2 fw-bold">
-                        ค้นหา
+            <div class="col-12 col-md-8 col-lg-6">
+                <form action="search.php" method="GET" class="position-relative px-2 px-md-0">
+                    <input type="text" name="q" 
+                           class="form-control form-control-lg rounded-pill shadow-lg border-0 ps-4 py-3 fs-6 fs-md-5"
+                           style="padding-right: 110px;" 
+                           placeholder="ค้นหาเมนูโปรด... (เช่น หม้อแกง)">
+                    
+                    <button type="submit" 
+                            class="btn btn-purple rounded-pill position-absolute top-50 end-0 translate-middle-y me-3 me-md-2 px-3 px-md-4 py-2 fw-bold shadow-sm"
+                            style="z-index: 5;">
+                        <i class="fas fa-search"></i> 
+                        <span class="d-none d-md-inline ms-1">ค้นหา</span>
                     </button>
                 </form>
-                
-                <div class="mt-3 d-flex justify-content-center gap-2 flex-wrap">
-                    <span class="text-white-50 small">คำค้นยอดฮิต:</span>
-                    <a href="search.php?q=หม้อแกง" class="badge bg-white bg-opacity-10 text-white text-decoration-none fw-normal border border-white border-opacity-25 hover-up transition-all">#หม้อแกง</a>
-                    <a href="search.php?q=น้ำตาลโตนด" class="badge bg-white bg-opacity-10 text-white text-decoration-none fw-normal border border-white border-opacity-25 hover-up transition-all">#น้ำตาลโตนด</a>
+
+                <div class="mt-3 d-flex justify-content-center align-items-center gap-2 flex-wrap px-2">
+                    <span class="text-white-50 small text-nowrap">คำค้นยอดฮิต:</span>
+                    <a href="search.php?q=หม้อแกง" class="badge bg-white bg-opacity-10 text-white text-decoration-none fw-normal border border-white border-opacity-25 hover-up transition-all py-2 px-3 rounded-pill">#หม้อแกง</a>
+                    <a href="search.php?q=น้ำตาลโตนด" class="badge bg-white bg-opacity-10 text-white text-decoration-none fw-normal border border-white border-opacity-25 hover-up transition-all py-2 px-3 rounded-pill">#น้ำตาลโตนด</a>
+                    <a href="search.php?q=บ้าบิ่น" class="badge bg-white bg-opacity-10 text-white text-decoration-none fw-normal border border-white border-opacity-25 hover-up transition-all py-2 px-3 rounded-pill">#บ้าบิ่น</a>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="position-absolute bottom-0 start-0 translate-middle-x mb-n5 ms-n5 rounded-circle bg-white opacity-10" style="width: 300px; height: 300px;"></div>
 </div>
 
 <div class="container py-5">
@@ -85,10 +100,10 @@ include 'includes/navbar.php';
                 <div class="col-6 col-md-6 col-lg-3">
                     <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-up transition-all">
                         <div class="position-relative">
-                            <img src="<?= (!empty($p['image'])) ? (filter_var($p['image'], FILTER_VALIDATE_URL) ? $p['image'] : 'uploads/kanom/'.$p['image']) : 'https://placehold.co/400x300?text=No+Image' ?>" 
-                                 class="card-img-top" style="height: 200px; object-fit: cover;" 
-                                 alt="<?= htmlspecialchars($p['name']) ?>">
-                            
+                            <img src="<?= (!empty($p['image'])) ? (filter_var($p['image'], FILTER_VALIDATE_URL) ? $p['image'] : 'uploads/kanom/' . $p['image']) : 'https://placehold.co/400x300?text=No+Image' ?>"
+                                class="card-img-top" style="height: 200px; object-fit: cover;"
+                                alt="<?= htmlspecialchars($p['name']) ?>">
+
                             <?php if ($p['category'] == 'dessert'): ?>
                                 <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2 rounded-pill shadow-sm">New</span>
                             <?php endif; ?>
@@ -96,7 +111,7 @@ include 'includes/navbar.php';
                         <div class="card-body d-flex flex-column">
                             <h6 class="card-title fw-bold text-truncate mb-1"><?= htmlspecialchars($p['name']) ?></h6>
                             <p class="small text-muted mb-3 text-truncate"><?= htmlspecialchars($p['description']) ?></p>
-                            
+
                             <div class="mt-auto d-flex justify-content-between align-items-center">
                                 <span class="h5 fw-bold text-purple mb-0">฿<?= number_format($p['price']) ?></span>
                                 <a href="shop_detail.php?id=<?= $p['shop_id'] ?>" class="btn btn-sm btn-light rounded-circle shadow-sm text-purple" style="width: 32px; height: 32px; padding: 0; line-height: 32px;">
@@ -120,12 +135,12 @@ include 'includes/navbar.php';
             <div class="col-md-6 col-lg-3">
                 <div class="card h-100 border-0 shadow-sm rounded-4 text-center py-4 hover-up transition-all">
                     <div class="card-body">
-                        <img src="<?= (!empty($s['profile_image'])) ? (filter_var($s['profile_image'], FILTER_VALIDATE_URL) ? $s['profile_image'] : 'uploads/profiles/'.$s['profile_image']) : 'https://placehold.co/100x100?text=Shop' ?>" 
-                             class="rounded-circle shadow-sm mb-3 border" width="80" height="80" style="object-fit: cover;">
-                        
+                        <img src="<?= (!empty($s['profile_image'])) ? (filter_var($s['profile_image'], FILTER_VALIDATE_URL) ? $s['profile_image'] : 'uploads/profiles/' . $s['profile_image']) : 'https://placehold.co/100x100?text=Shop' ?>"
+                            class="rounded-circle shadow-sm mb-3 border" width="80" height="80" style="object-fit: cover;">
+
                         <h6 class="fw-bold text-truncate mb-1"><?= htmlspecialchars($s['shop_name']) ?></h6>
                         <p class="small text-muted mb-3"><i class="fas fa-map-marker-alt me-1 text-danger"></i> เพชรบุรี</p>
-                        
+
                         <a href="shop_detail.php?id=<?= $s['id'] ?>" class="btn btn-outline-dark btn-sm rounded-pill px-4">เยี่ยมชม</a>
                     </div>
                 </div>
@@ -134,6 +149,6 @@ include 'includes/navbar.php';
     </div>
 </div>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
 <?php include 'includes/footer.php'; ?>

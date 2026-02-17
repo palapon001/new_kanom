@@ -1,169 +1,208 @@
 <?php
-// 1. ป้องกัน Error และกำหนด Path
 if (!isset($path_prefix)) $path_prefix = '';
-
-// 2. เช็คว่าเป็นหน้าไหน
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// 3. นับจำนวนสินค้าในตะกร้า
-$cart_count = 0;
-if (isset($_SESSION['cart'])) {
-    $cart_count = array_sum($_SESSION['cart']);
+// 🛑 1. ถ้าเป็น ADMIN ให้ไปเรียก Sidebar แทน
+if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
+    include 'admin_sidebar.php';
+    return;
 }
 
-// 4. Query ราคากลาง (ทำครั้งเดียวตรงนี้เลย)
-$sql_market = "SELECT 
-                c.name, c.unit, 
-                AVG(p.price) as avg_price
-               FROM central_ingredients c
-               JOIN products p ON c.id = p.central_id AND p.status = 'active'
-               GROUP BY c.id 
-               HAVING avg_price > 0
-               ORDER BY RAND() LIMIT 10";
-$market_prices = select($sql_market);
-$count_items = count($market_prices);
+// =================================================================
+// 🛍️ Navbar for User / Shop / Guest
+// =================================================================
+
+$cart_count = isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0;
+
+// Config Colors
+$navbar_bg   = $config['theme']['colors']['secondary']   ?? '#2D1F57';
+$navbar_text = $config['theme']['colors']['navbar_text'] ?? '#ffffff';
+$accent_color = $config['theme']['colors']['accent']     ?? '#FDB913';
 ?>
 
-<nav class="navbar navbar-expand-lg navbar-dark navbar-nia py-3 sticky-top shadow-sm"
-    style="background-color: <?= $config['theme']['colors']['secondary'] ?>;">
-
+<nav class="navbar navbar-expand-lg py-3 sticky-top transition-all" 
+     style="background-color: <?= $navbar_bg ?>; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+    
     <div class="container">
-        <a class="navbar-brand d-flex align-items-center" href="<?= $path_prefix ?>index.php">
-            <div class="bg-white rounded-circle d-flex justify-content-center align-items-center me-2 shadow-sm" 
-                 style="width: 45px; height: 45px; padding: 5px;">
-                <img src="<?= $path_prefix ?>assets/icon.svg" alt="Logo" 
-                     width="100%" height="100%" style="object-fit: contain;">
+        
+        <a class="navbar-brand d-flex align-items-center gap-3" href="<?= $path_prefix ?>index.php" style="color: <?= $navbar_text ?> !important;">
+            <div class="logo-wrapper bg-white shadow-sm d-flex justify-content-center align-items-center">
+                <img src="<?= $path_prefix ?>assets/icon.svg" alt="Logo" class="img-fluid">
             </div>
-            <div class="d-flex flex-column">
-                <span class="fw-bold text-uppercase ls-1 fs-5"><?= $config['app']['name'] ?></span>
-                <span style="font-size: 0.65rem; opacity: 0.7; letter-spacing: 2px;"><?= $config['app']['desc'] ?></span>
+            <div class="d-flex flex-column lh-1 brand-text">
+                <span class="fw-bold text-uppercase fs-5 ls-1"><?= $config['app']['name'] ?></span>
+                <span class="opacity-75 small fw-light" style="font-size: 0.75rem;"><?= $config['app']['desc'] ?></span>
             </div>
         </a>
 
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
-            <span class="navbar-toggler-icon"></span>
+        <button class="navbar-toggler border-0 p-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+            <div class="hamburger-icon">
+                <span style="background-color: <?= $navbar_text ?>;"></span>
+                <span style="background-color: <?= $navbar_text ?>;"></span>
+                <span style="background-color: <?= $navbar_text ?>;"></span>
+            </div>
+            <?php if ($cart_count > 0): ?>
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-lg-none"></span>
+            <?php endif; ?>
         </button>
 
-        <div class="collapse navbar-collapse" id="navContent">
-            <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item">
-                    <a class="nav-link px-3 <?= ($current_page == 'index.php') ? 'active' : '' ?>" href="<?= $path_prefix ?>index.php">หน้าแรก</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 <?= ($current_page == 'market_price.php') ? 'active' : '' ?>" href="<?= $path_prefix ?>market_price.php">
-                        <i class="fas fa-tags me-1"></i> ราคากลาง
-                    </a>
-                </li>
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" 
+             style="background-color: <?= $navbar_bg ?>;">
+            
+            <div class="offcanvas-header border-bottom border-white border-opacity-10">
+                <h5 class="offcanvas-title fw-bold" style="color: <?= $navbar_text ?>;">เมนูหลัก</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+            </div>
 
-                <?php if (isset($_SESSION['user_id']) && $_SESSION['role'] == 'admin'): ?>
+            <div class="offcanvas-body">
+                
+                <form class="d-flex me-auto ms-lg-4 my-3 my-lg-0 w-100 search-form" style="max-width: 350px;" action="<?= $path_prefix ?>search.php">
+                    <div class="input-group position-relative">
+                        <input class="form-control rounded-pill border-0 ps-4 py-2" type="search" name="q" placeholder="ค้นหาเมนูอร่อย..." 
+                               style="background: rgba(255,255,255,0.15); color: <?= $navbar_text ?>; padding-right: 40px;">
+                        <button class="btn border-0 position-absolute end-0 top-50 translate-middle-y me-2 rounded-circle d-flex align-items-center justify-content-center" 
+                                type="submit" style="width: 32px; height: 32px; background: <?= $accent_color ?>; z-index: 5;">
+                            <i class="fas fa-search text-dark fa-sm"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <ul class="navbar-nav justify-content-end flex-grow-1 align-items-center gap-lg-1">
+                    
                     <li class="nav-item">
-                        <a class="nav-link px-3" href="<?= $path_prefix ?>admin/dashboard.php">Admin Panel</a>
+                        <a class="nav-link nav-link-custom px-3 <?= ($current_page == 'index.php') ? 'active' : '' ?>" 
+                           href="<?= $path_prefix ?>index.php" style="color: <?= $navbar_text ?> !important;">หน้าแรก</a>
                     </li>
-                    <li class="nav-item ms-2">
-                        <a class="btn btn-outline-light btn-sm rounded-pill px-3" href="<?= $path_prefix ?>logout.php">Logout</a>
-                    </li>
-                <?php elseif (isset($_SESSION['user_id']) && $_SESSION['role'] == 'shop'): ?>
                     <li class="nav-item">
-                        <a class="nav-link px-3" href="<?= $path_prefix ?>shop/dashboard.php">ร้านค้าของฉัน</a>
+                        <a class="nav-link nav-link-custom px-3 <?= ($current_page == 'market_price.php') ? 'active' : '' ?>" 
+                           href="<?= $path_prefix ?>market_price.php" style="color: <?= $navbar_text ?> !important;">ราคากลาง</a>
                     </li>
-                    <li class="nav-item ms-2">
-                        <a class="btn btn-outline-light btn-sm rounded-pill px-3" href="<?= $path_prefix ?>logout.php">Logout</a>
-                    </li>
-                <?php elseif (isset($_SESSION['user_id']) && $_SESSION['role'] == 'user'): ?>
-                    <li class="nav-item me-2">
-                        <a class="nav-link position-relative" href="<?= $path_prefix ?>cart.php">
-                            <i class="fas fa-shopping-cart fa-lg"></i>
-                            <?php if ($cart_count > 0): ?>
-                                <span class="position-absolute top-10 start-90 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.6rem;">
-                                    <?= $cart_count ?>
-                                </span>
-                            <?php endif; ?>
-                        </a>
-                    </li>
-                    <li class="nav-item ms-2">
-                        <a class="btn btn-outline-light btn-sm rounded-pill px-3" href="<?= $path_prefix ?>logout.php">Logout</a>
-                    </li>
-                <?php else: ?>
-                    <li class="nav-item d-none d-lg-block text-white-50 mx-2">|</li>
-                    <li class="nav-item mt-3 mt-lg-0">
-                        <a href="<?= $path_prefix ?>login.php" class="btn btn-outline-light btn-sm px-4 rounded-pill me-2">เข้าสู่ระบบ</a>
-                        <a href="<?= $path_prefix ?>register.php" class="btn btn-outline-light btn-sm px-4 rounded-pill me-2">สมัครสมาชิก</a>
-                    </li>
-                <?php endif; ?>
-            </ul>
+
+                    <?php if (isset($_SESSION['user_id']) && $_SESSION['role'] == 'shop'): ?>
+                        <li class="nav-item dropdown ms-lg-2">
+                            <a class="nav-link dropdown-toggle btn-role shop px-3 py-2 rounded-pill fw-bold" href="#" data-bs-toggle="dropdown">
+                                <i class="fas fa-store me-2"></i> ร้านค้า
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2 p-2">
+                                <li><a class="dropdown-item rounded-3 mb-1" href="<?= $path_prefix ?>shop/dashboard.php"><i class="fas fa-chart-pie me-2 text-primary"></i> Dashboard</a></li>
+                                <li><a class="dropdown-item rounded-3 mb-1" href="<?= $path_prefix ?>shop/menu_manage.php"><i class="fas fa-utensils me-2 text-warning"></i> จัดการเมนู</a></li>
+                                <li><a class="dropdown-item rounded-3 mb-1" href="<?= $path_prefix ?>shop/order_list.php"><i class="fas fa-list-alt me-2 text-success"></i> คำสั่งซื้อ</a></li>
+                                <li><hr class="dropdown-divider mx-2"></li>
+                                <li><a class="dropdown-item rounded-3 text-danger" href="<?= $path_prefix ?>logout.php"><i class="fas fa-sign-out-alt me-2"></i> ออกจากระบบ</a></li>
+                            </ul>
+                        </li>
+
+                    <?php elseif (isset($_SESSION['user_id']) && $_SESSION['role'] == 'user'): ?>
+                        <li class="nav-item me-2">
+                            <a class="nav-link position-relative cart-btn" href="<?= $path_prefix ?>cart.php" style="color: <?= $navbar_text ?> !important;">
+                                <i class="fas fa-shopping-basket fa-lg"></i>
+                                <?php if ($cart_count > 0): ?>
+                                    <span class="cart-badge badge rounded-pill bg-danger border border-2 border-white">
+                                        <?= $cart_count ?>
+                                    </span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link profile-toggle p-0" href="#" data-bs-toggle="dropdown">
+                                <img src="<?= !empty($_SESSION['profile_image']) ? $_SESSION['profile_image'] : 'https://placehold.co/50' ?>" 
+                                     class="rounded-circle border border-2 border-white shadow-sm" width="40" height="40" style="object-fit: cover;">
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-3 p-2">
+                                <li class="px-3 py-2 text-muted small fw-bold">สวัสดี, <?= $_SESSION['username'] ?? 'User' ?></li>
+                                <li><hr class="dropdown-divider mx-2"></li>
+                                <li><a class="dropdown-item rounded-3 mb-1" href="<?= $path_prefix ?>profile.php"><i class="fas fa-user me-2 text-primary"></i> โปรไฟล์</a></li>
+                                <li><a class="dropdown-item rounded-3 mb-1" href="<?= $path_prefix ?>my_orders.php"><i class="fas fa-history me-2 text-success"></i> ประวัติการสั่งซื้อ</a></li>
+                                <li><a class="dropdown-item rounded-3 text-danger" href="<?= $path_prefix ?>logout.php"><i class="fas fa-sign-out-alt me-2"></i> ออกจากระบบ</a></li>
+                            </ul>
+                        </li>
+
+                    <?php else: ?>
+                        <li class="nav-item d-flex align-items-center gap-2 mt-3 mt-lg-0 ms-lg-3">
+                            <a href="<?= $path_prefix ?>login.php" class="btn btn-outline-light rounded-pill px-4 fw-bold login-btn"
+                               style="color: <?= $navbar_text ?>; border-color: <?= $navbar_text ?>;">
+                               เข้าสู่ระบบ
+                            </a>
+                            <a href="<?= $path_prefix ?>register.php" class="btn rounded-pill px-4 fw-bold register-btn" 
+                               style="background-color: <?= $accent_color ?>; color: #000;">
+                               สมัครสมาชิก
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>
 
-<?php if (!empty($market_prices)): ?>
-    <div class="bg-dark py-2 overflow-hidden border-bottom" style="height: 40px;">
-        <div class="container h-100">
-            <div class="d-flex align-items-center h-100">
-
-                <div class="flex-shrink-0 me-3 border-end border-secondary pe-3 z-1 bg-dark">
-                    <span class="text-warning fw-bold small"><i class="fas fa-chart-line me-2"></i>ราคากลาง</span>
-                </div>
-
-                <div class="ticker-wrap w-100 overflow-hidden position-relative">
-                    <div class="<?= ($count_items > 5) ? 'ticker' : 'd-flex align-items-center h-100' ?>">
-                        <?php
-                        // Logic: Loop 2 รอบถ้าสินค้า > 5, Loop 1 รอบถ้าน้อยกว่า
-                        $loops = ($count_items > 5) ? 2 : 1;
-                        
-                        for ($i = 0; $i < $loops; $i++):
-                            foreach ($market_prices as $mp):
-                        ?>
-                                <div class="ticker-item d-inline-flex align-items-center mx-4">
-                                    <span class="text-white-50 small me-2"><?= htmlspecialchars($mp['name']) ?></span>
-                                    <span class="fw-bold text-success small">฿<?= number_format($mp['avg_price'], 2) ?></span>
-                                    <span class="badge bg-secondary text-white ms-1" style="font-size: 0.6rem;"><?= $mp['unit'] ?></span>
-                                </div>
-                        <?php
-                            endforeach;
-                        endfor;
-                        ?>
-                    </div>
-                </div>
-
-                <a href="<?= $path_prefix ?>market_price.php" class="flex-shrink-0 ms-3 text-white-50 text-decoration-none small hover-white z-1 bg-dark ps-2">
-                    ดูทั้งหมด <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-<?php endif; ?>
-
 <style>
-    .ticker-wrap {
-        width: 100%;
-        overflow: hidden;
-        white-space: nowrap;
+    /* 1. Logo Styling */
+    .logo-wrapper {
+        width: 45px; height: 45px; border-radius: 12px;
+        transform: rotate(-5deg); transition: transform 0.3s ease;
+    }
+    .navbar-brand:hover .logo-wrapper { transform: rotate(0deg) scale(1.1); }
+    .ls-1 { letter-spacing: 1px; }
+
+    /* 2. Search Bar Placeholder Color */
+    .search-form input::placeholder { color: <?= $navbar_text ?>; opacity: 0.7; }
+    .search-form input:focus { 
+        background: rgba(255,255,255,0.25) !important; 
+        box-shadow: none; 
+        color: <?= $navbar_text ?>; 
     }
 
-    /* Class สำหรับทำให้ข้อความวิ่ง */
-    .ticker {
-        display: inline-block;
-        animation: ticker 40s linear infinite; /* ปรับเวลาตามความชอบ */
+    /* 3. Link Animation (Underline Effect) */
+    .nav-link-custom {
+        position: relative;
+        font-weight: 500;
+        opacity: 0.9;
+        transition: all 0.3s;
+    }
+    .nav-link-custom:hover, .nav-link-custom.active {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+    .nav-link-custom::after {
+        content: ''; position: absolute; width: 0; height: 3px;
+        bottom: 0; left: 50%; background-color: <?= $accent_color ?>;
+        transition: all 0.3s ease; border-radius: 10px;
+        transform: translateX(-50%);
+    }
+    .nav-link-custom:hover::after, .nav-link-custom.active::after { width: 60%; }
+
+    /* 4. Role Button Style */
+    .btn-role.shop { background: rgba(255,255,255,0.15); color: #fff !important; backdrop-filter: blur(5px); }
+    .btn-role:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+
+    /* 5. Cart Icon Animation */
+    .cart-btn:hover i { animation: swing 0.8s ease; }
+    .cart-badge { position: absolute; top: 0; right: 0; transform: translate(30%, -20%); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+    /* 6. Dropdown Menu (Clean & Modern) */
+    .dropdown-menu { 
+        background-color: #ffffff !important; 
+        animation: slideDown 0.3s ease forwards;
+        transform-origin: top center;
+    }
+    .dropdown-item { color: #333 !important; transition: all 0.2s; border-left: 3px solid transparent; }
+    .dropdown-item:hover { 
+        background-color: #f8f9fa; 
+        color: <?= $config['theme']['colors']['primary'] ?? '#E6007E' ?> !important;
+        border-left: 3px solid <?= $accent_color ?>;
+        padding-left: 1.5rem;
     }
 
-    .ticker-item {
-        display: inline-block;
-    }
+    /* 7. Button Hover Effects */
+    .login-btn:hover { background: rgba(255,255,255,0.1); }
+    .register-btn:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 
-    .ticker-wrap:hover .ticker {
-        animation-play-state: paused;
-    }
-
-    @keyframes ticker {
-        0% { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
-    }
-
-    .hover-white:hover { color: white !important; }
+    /* 8. Hamburger Icon (Custom) */
+    .hamburger-icon { width: 30px; height: 20px; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+    .hamburger-icon span { display: block; height: 3px; width: 100%; border-radius: 3px; transition: all 0.3s; }
     
-    /* Responsive Adjustments */
-    @media (max-width: 991px) {
-        .navbar-brand img { height: 30px; }
-        .fs-5 { font-size: 1rem !important; }
-    }
+    /* Animations */
+    @keyframes swing { 20% { transform: rotate(15deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(5deg); } 80% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
+    @keyframes popIn { from { transform: translate(30%, -20%) scale(0); } to { transform: translate(30%, -20%) scale(1); } }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>

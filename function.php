@@ -9,17 +9,21 @@ function pre_var($data)
 // 1. ฟังก์ชันเชื่อมต่อฐานข้อมูล (Connection Database)
 function condb()
 {
-    global $config; // เรียกใช้ตัวแปร $config จากไฟล์ config.php
+    global $db_config; // เรียกใช้ตัวแปร $config จากไฟล์ config.php
 
-    $db_host = $config['database']['host'];
-    $db_name = $config['database']['dbname'];
-    $db_user = $config['database']['username'];
-    $db_pass = $config['database']['password'];
-    $charset = $config['database']['charset'];
+    $db_host = $db_config['host'];
+    $db_name = $db_config['dbname'];
+    $db_user = $db_config['username'];
+    $db_pass = $db_config['password'];
+    $charset = $db_config['charset'];
 
     try {
         $dsn = "mysql:host=$db_host;dbname=$db_name;charset=$charset";
-        $options = $config['database']['options'];
+        $options = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ];
 
         $pdo = new PDO($dsn, $db_user, $db_pass, $options);
         return $pdo;
@@ -105,7 +109,7 @@ function update($table, $data, $condition, $params = [])
     try {
         $stmt = $pdo->prepare($sql);
         return $stmt->execute($values); // คืนค่า True ถ้าสำเร็จ
-    } catch (PDOException $e) { 
+    } catch (PDOException $e) {
         return false;
     }
 }
